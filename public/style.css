@@ -1,0 +1,398 @@
+/* Pokémon Game Frontend Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', monospace;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+header h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+header p {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    border-color: #fff;
+}
+
+.tab-content {
+    display: none;
+    background: rgba(255,255,255,0.95);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.section h2 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+/* Buttons */
+.btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+.btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn.primary {
+    background: #e74c3c;
+}
+
+.btn.primary:hover {
+    background: #c0392b;
+}
+
+.btn.secondary {
+    background: #27ae60;
+}
+
+.btn.secondary:hover {
+    background: #229954;
+}
+
+.btn.battle-btn {
+    background: #f39c12;
+    font-size: 12px;
+    padding: 15px 25px;
+}
+
+.btn.battle-btn:hover {
+    background: #e67e22;
+}
+
+.btn.arena-btn {
+    background: #9b59b6;
+    font-size: 12px;
+    padding: 15px 25px;
+}
+
+.btn.arena-btn:hover {
+    background: #8e44ad;
+}
+
+/* Controls */
+.controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Trainers Grid */
+.trainers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.trainer-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 3px solid #dee2e6;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.trainer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.trainer-name {
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.trainer-info {
+    font-size: 8px;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.pokemon-list {
+    margin-top: 10px;
+}
+
+.pokemon-item {
+    background: rgba(52, 152, 219, 0.1);
+    border: 1px solid #3498db;
+    border-radius: 5px;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 8px;
+}
+
+.pokemon-name {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.pokemon-hp {
+    color: #e74c3c;
+}
+
+.attacks-list {
+    margin-top: 5px;
+    font-size: 7px;
+    color: #6c757d;
+}
+
+/* Battle Controls */
+.battle-controls, .arena-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.trainer-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.trainer-select label {
+    font-size: 10px;
+    color: #2c3e50;
+}
+
+.trainer-select select {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    background: white;
+}
+
+.vs {
+    font-size: 16px;
+    font-weight: bold;
+    color: #e74c3c;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.battle-buttons, .arena-buttons {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Results */
+.battle-result, .arena-result, .stats-result {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 2px solid #dee2e6;
+    font-size: 10px;
+    line-height: 1.8;
+}
+
+.battle-winner {
+    color: #27ae60;
+    font-weight: bold;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.battle-details {
+    background: #e9ecef;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.arena-summary {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+}
+
+/* Loading */
+.loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 1000;
+}
+
+.loading.hidden {
+    display: none;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .tab-content {
+        padding: 20px;
+    }
+    
+    .battle-controls, .arena-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .trainers-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn {
+        font-size: 8px;
+        padding: 8px 15px;
+    }
+}

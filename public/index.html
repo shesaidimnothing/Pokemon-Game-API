@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Game API - Frontend</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Pokémon Game API</h1>
+            <p>Battle System & Trainer Management</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('trainers')">👥 Trainers</button>
+            <button class="tab-btn" onclick="showTab('battle')">⚔️ Battle</button>
+            <button class="tab-btn" onclick="showTab('arena')">🏟️ Arena</button>
+            <button class="tab-btn" onclick="showTab('stats')">📊 Stats</button>
+        </div>
+
+        <!-- Trainers Tab -->
+        <div id="trainers" class="tab-content active">
+            <div class="section">
+                <h2>👥 Trainers</h2>
+                <div class="controls">
+                    <button onclick="loadTrainers()" class="btn primary">🔄 Refresh Trainers</button>
+                    <button onclick="showCreateTrainer()" class="btn secondary">➕ Add Trainer</button>
+                </div>
+                <div id="trainers-list" class="trainers-grid"></div>
+            </div>
+        </div>
+
+        <!-- Battle Tab -->
+        <div id="battle" class="tab-content">
+            <div class="section">
+                <h2>⚔️ Battle Arena</h2>
+                <div class="battle-controls">
+                    <div class="trainer-select">
+                        <label>Trainer 1:</label>
+                        <select id="trainer1-select">
+                            <option value="">Select Trainer 1</option>
+                        </select>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="trainer-select">
+                        <label>Trainer 2:</label>
+                        <select id="trainer2-select">
+                            <option value="">Select Trainer 2</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="battle-buttons">
+                    <button onclick="startRandomBattle()" class="btn battle-btn">🎲 Random Battle</button>
+                    <button onclick="startDeterministicBattle()" class="btn battle-btn">🎯 Deterministic Battle</button>
+                </div>
+                <div id="battle-result" class="battle-result"></div>
+            </div>
+        </div>
+
+        <!-- Arena Tab -->
+        <div id="arena" class="tab-content">
+            <div class="section">
+                <h2>🏟️ Arena Tournament</h2>
+                <div class="arena-controls">
+                    <div class="trainer-select">
+                        <label>Challenger 1:</label>
+                        <select id="arena-trainer1-select">
+                            <option value="">Select Challenger 1</option>
+                        </select>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="trainer-select">
+                        <label>Challenger 2:</label>
+                        <select id="arena-trainer2-select">
+                            <option value="">Select Challenger 2</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="arena-buttons">
+                    <button onclick="startArena1()" class="btn arena-btn">🎲 Arena 1 (100 Random Battles)</button>
+                    <button onclick="startArena2()" class="btn arena-btn">🎯 Arena 2 (100 Deterministic Battles)</button>
+                </div>
+                <div id="arena-result" class="arena-result"></div>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="stats" class="tab-content">
+            <div class="section">
+                <h2>📊 Statistics</h2>
+                <div class="stats-controls">
+                    <select id="stats-trainer-select">
+                        <option value="">Select Trainer for Stats</option>
+                    </select>
+                    <button onclick="loadTrainerStats()" class="btn primary">📈 Load Stats</button>
+                </div>
+                <div id="stats-result" class="stats-result"></div>
+            </div>
+        </div>
+
+        <!-- Create Trainer Modal -->
+        <div id="create-trainer-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeCreateTrainer()">&times;</span>
+                <h2>Create New Trainer</h2>
+                <form onsubmit="createTrainer(event)">
+                    <input type="text" id="trainer-name" placeholder="Trainer Name" required>
+                    <button type="submit" class="btn primary">Create Trainer</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
