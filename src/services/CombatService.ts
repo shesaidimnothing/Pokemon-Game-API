@@ -3,9 +3,6 @@ import { Trainer } from '../models/Trainer';
 import { ICombatResult, IArenaResult } from '../types';
 
 export class CombatService {
-  /**
-   * Défi aléatoire entre deux dresseurs
-   */
   async randomChallenge(trainer1Id: number, trainer2Id: number): Promise<ICombatResult> {
     const trainer1 = await trainerService.getTrainerById(trainer1Id);
     const trainer2 = await trainerService.getTrainerById(trainer2Id);
@@ -20,7 +17,6 @@ export class CombatService {
 
     const result = trainer1.randomChallenge(trainer2);
 
-    // Sauvegarder les changements d'expérience
     await trainerService.updateTrainer(trainer1Id, {
       level: trainer1.level,
       experience: trainer1.experience
@@ -34,9 +30,6 @@ export class CombatService {
     return result;
   }
 
-  /**
-   * Défi déterministe entre deux dresseurs
-   */
   async deterministicChallenge(trainer1Id: number, trainer2Id: number): Promise<ICombatResult> {
     const trainer1 = await trainerService.getTrainerById(trainer1Id);
     const trainer2 = await trainerService.getTrainerById(trainer2Id);
@@ -51,7 +44,6 @@ export class CombatService {
 
     const result = trainer1.deterministicChallenge(trainer2);
 
-    // Sauvegarder les changements d'expérience
     await trainerService.updateTrainer(trainer1Id, {
       level: trainer1.level,
       experience: trainer1.experience
@@ -65,9 +57,6 @@ export class CombatService {
     return result;
   }
 
-  /**
-   * Arène 1 : 100 combats aléatoires successifs
-   */
   async arena1(trainer1Id: number, trainer2Id: number): Promise<IArenaResult> {
     const trainer1 = await trainerService.getTrainerById(trainer1Id);
     const trainer2 = await trainerService.getTrainerById(trainer2Id);
@@ -78,7 +67,6 @@ export class CombatService {
 
     const result = trainer1.arena1(trainer2);
 
-    // Sauvegarder les changements d'expérience
     await trainerService.updateTrainer(trainer1Id, {
       level: trainer1.level,
       experience: trainer1.experience
@@ -89,12 +77,12 @@ export class CombatService {
       experience: trainer2.experience
     });
 
+    await trainerService.savePokemonHP(trainer1Id, trainer1.pokemons);
+    await trainerService.savePokemonHP(trainer2Id, trainer2.pokemons);
+
     return result;
   }
 
-  /**
-   * Arène 2 : 100 combats déterministes consécutifs
-   */
   async arena2(trainer1Id: number, trainer2Id: number): Promise<IArenaResult> {
     const trainer1 = await trainerService.getTrainerById(trainer1Id);
     const trainer2 = await trainerService.getTrainerById(trainer2Id);
@@ -105,7 +93,6 @@ export class CombatService {
 
     const result = trainer1.arena2(trainer2);
 
-    // Sauvegarder les changements d'expérience
     await trainerService.updateTrainer(trainer1Id, {
       level: trainer1.level,
       experience: trainer1.experience
@@ -116,19 +103,16 @@ export class CombatService {
       experience: trainer2.experience
     });
 
+    await trainerService.savePokemonHP(trainer1Id, trainer1.pokemons);
+    await trainerService.savePokemonHP(trainer2Id, trainer2.pokemons);
+
     return result;
   }
 
-  /**
-   * Soigne tous les Pokémon d'un dresseur
-   */
   async healTrainerPokemons(trainerId: number): Promise<boolean> {
     return await trainerService.healAllPokemons(trainerId);
   }
 
-  /**
-   * Obtient les statistiques de combat d'un dresseur
-   */
   async getTrainerCombatStats(trainerId: number): Promise<{
     trainer: Trainer;
     alivePokemonCount: number;
@@ -156,4 +140,3 @@ export class CombatService {
 }
 
 export const combatService = new CombatService();
-

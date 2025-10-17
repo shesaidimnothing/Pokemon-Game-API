@@ -1,4 +1,3 @@
-// Script de test simple pour vérifier l'API
 const http = require('http');
 
 const options = {
@@ -33,4 +32,3 @@ req.on('error', (error) => {
 });
 
 req.end();
-

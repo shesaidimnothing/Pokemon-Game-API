@@ -48,82 +48,62 @@
     <script>
         const API_BASE = 'http://localhost:3001/api';
 
-        async function apiCall(endpoint, method = 'GET', data = null) {
-            try {
-                const options = {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' }
-                };
-                if (data) options.body = JSON.stringify(data);
-                
-                const response = await fetch(`${API_BASE}${endpoint}`, options);
-                const result = await response.json();
-                
-                if (!result.success) throw new Error(result.message || 'API Error');
-                return result;
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
-            }
-        }
-
         async function testConnection() {
-            const resultDiv = document.getElementById('connection-result');
             try {
-                const response = await fetch('http://localhost:3001/health');
+                const response = await fetch(`${API_BASE}/trainers`);
                 const data = await response.json();
-                resultDiv.innerHTML = `<div class="success">✅ API is running!<br><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                document.getElementById('connection-result').innerHTML = 
+                    '<div class="success">✅ API Connection Successful!</div><pre>' + JSON.stringify(data, null, 2) + '</pre>';
             } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ API Error: ${error.message}</div>`;
+                document.getElementById('connection-result').innerHTML = 
+                    '<div class="error">❌ API Connection Failed: ' + error.message + '</div>';
             }
         }
 
         async function loadTrainers() {
-            const resultDiv = document.getElementById('trainers-result');
             try {
-                const result = await apiCall('/trainers');
-                resultDiv.innerHTML = `<div class="success">✅ Found ${result.data.length} trainers:<br><pre>${JSON.stringify(result.data, null, 2)}</pre></div>`;
+                const response = await fetch(`${API_BASE}/trainers`);
+                const data = await response.json();
+                document.getElementById('trainers-result').innerHTML = 
+                    '<div class="success">✅ Trainers Loaded!</div><pre>' + JSON.stringify(data, null, 2) + '</pre>';
             } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error loading trainers: ${error.message}</div>`;
+                document.getElementById('trainers-result').innerHTML = 
+                    '<div class="error">❌ Failed to load trainers: ' + error.message + '</div>';
             }
         }
 
         async function createTrainer() {
-            const resultDiv = document.getElementById('create-result');
-            const name = document.getElementById('trainer-name').value.trim();
-            
-            if (!name) {
-                resultDiv.innerHTML = `<div class="error">❌ Please enter a trainer name</div>`;
-                return;
-            }
-
+            const name = document.getElementById('trainer-name').value;
             try {
-                const result = await apiCall('/trainers', 'POST', { name });
-                resultDiv.innerHTML = `<div class="success">✅ Trainer "${name}" created successfully!<br><pre>${JSON.stringify(result.data, null, 2)}</pre></div>`;
-                // Refresh trainers list
-                loadTrainers();
+                const response = await fetch(`${API_BASE}/trainers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await response.json();
+                document.getElementById('create-result').innerHTML = 
+                    '<div class="success">✅ Trainer Created!</div><pre>' + JSON.stringify(data, null, 2) + '</pre>';
             } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error creating trainer: ${error.message}</div>`;
+                document.getElementById('create-result').innerHTML = 
+                    '<div class="error">❌ Failed to create trainer: ' + error.message + '</div>';
             }
         }
 
         async function testBattle() {
-            const resultDiv = document.getElementById('battle-result');
             try {
-                const result = await apiCall('/combat/random-challenge', 'POST', {
-                    trainer1Id: 1,
-                    trainer2Id: 2
+                const response = await fetch(`${API_BASE}/combat/random-challenge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trainer1Id: 1, trainer2Id: 2 })
                 });
-                resultDiv.innerHTML = `<div class="success">✅ Battle completed!<br><strong>Winner: ${result.data.winner.name}</strong><br><pre>${JSON.stringify(result.data, null, 2)}</pre></div>`;
+                const data = await response.json();
+                document.getElementById('battle-result').innerHTML = 
+                    '<div class="success">✅ Battle Completed!</div><pre>' + JSON.stringify(data, null, 2) + '</pre>';
             } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Battle error: ${error.message}</div>`;
+                document.getElementById('battle-result').innerHTML = 
+                    '<div class="error">❌ Battle failed: ' + error.message + '</div>';
             }
         }
-
-        // Auto-test connection on load
-        window.onload = function() {
-            testConnection();
-        };
     </script>
 </body>
 </html>

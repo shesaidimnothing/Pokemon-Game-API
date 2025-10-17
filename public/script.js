@@ -1,37 +1,32 @@
-// Pokémon Game API Frontend JavaScript
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = 'http://localhost:3000/api';
 
-// Global state
 let trainers = [];
 let currentTab = 'trainers';
+let selectedTrainerId = null;
+let selectedPokemonId = null;
+let availableAttacks = [];
 
-// Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     loadTrainers();
+    loadAvailableAttacks();
     showTab('trainers');
 });
 
-// Tab management
 function showTab(tabName) {
-    // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Remove active class from all buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Show selected tab
     document.getElementById(tabName).classList.add('active');
     
-    // Add active class to clicked button
     event.target.classList.add('active');
     
     currentTab = tabName;
     
-    // Load data for specific tabs
     if (tabName === 'battle' || tabName === 'arena') {
         loadTrainerSelects();
     } else if (tabName === 'stats') {
@@ -39,7 +34,6 @@ function showTab(tabName) {
     }
 }
 
-// Loading indicator
 function showLoading() {
     document.getElementById('loading').classList.remove('hidden');
 }
@@ -48,7 +42,6 @@ function hideLoading() {
     document.getElementById('loading').classList.add('hidden');
 }
 
-// API calls
 async function apiCall(endpoint, method = 'GET', data = null) {
     showLoading();
     try {
@@ -80,7 +73,6 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     }
 }
 
-// Load trainers
 async function loadTrainers() {
     try {
         const result = await apiCall('/trainers');
@@ -91,82 +83,314 @@ async function loadTrainers() {
     }
 }
 
-// Display trainers
 function displayTrainers() {
     const container = document.getElementById('trainers-list');
-    container.innerHTML = '';
+    if (!container) return;
     
-    trainers.forEach(trainer => {
-        const trainerCard = document.createElement('div');
-        trainerCard.className = 'trainer-card';
-        
-        const pokemonList = trainer.pokemons.map(pokemon => {
-            const attacks = pokemon.attacks.map(attack => 
-                `${attack.name} (${attack.damage}dmg, ${attack.currentUsage}/${attack.usageLimit})`
-            ).join(', ');
-            
-            return `
-                <div class="pokemon-item">
-                    <div class="pokemon-name">${pokemon.name}</div>
-                    <div class="pokemon-hp">HP: ${pokemon.lifePoint}/${pokemon.maxLifePoint}</div>
-                    <div class="attacks-list">Attacks: ${attacks || 'None'}</div>
+    if (trainers.length === 0) {
+        container.innerHTML = '<div class="no-data">Aucun dresseur trouvé</div>';
+        return;
+    }
+    
+    container.innerHTML = trainers.map(trainer => createTrainerCard(trainer)).join('');
+}
+
+function createTrainerCard(trainer) {
+    const pokemonList = trainer.pokemons.map(pokemon => createPokemonItem(trainer.id, pokemon)).join('');
+    
+    return `
+        <div class="trainer-card">
+            <div class="trainer-header">
+                <div class="trainer-name">${trainer.name}</div>
+                <div class="trainer-actions">
+                    <button onclick="manageTrainer(${trainer.id})" class="btn small">⚙️ Manage</button>
+                    <button onclick="healTrainerPokemon(${trainer.id})" class="btn small">💚 Heal All</button>
                 </div>
-            `;
-        }).join('');
-        
-        trainerCard.innerHTML = `
-            <div class="trainer-name">${trainer.name}</div>
+            </div>
             <div class="trainer-info">
                 Level: ${trainer.level} | Experience: ${trainer.experience}
             </div>
             <div class="pokemon-list">
                 ${pokemonList || '<div style="text-align: center; color: #6c757d; font-size: 8px;">No Pokémon</div>'}
             </div>
-        `;
+        </div>
+    `;
+}
+
+function createPokemonItem(trainerId, pokemon) {
+    const attacks = pokemon.attacks.map(attack => attack.name).join(', ');
+    
+    return `
+        <div class="pokemon-item clickable" onclick="managePokemonAttacks(${trainerId}, ${pokemon.id}, '${pokemon.name}')">
+            <div class="pokemon-name">${pokemon.name}</div>
+            <div class="pokemon-hp">HP: ${pokemon.lifePoint}/${pokemon.maxLifePoint}</div>
+            <div class="attacks-list">Attacks: ${attacks || 'None'}</div>
+            <div class="pokemon-manage-hint">Click to manage attacks</div>
+        </div>
+    `;
+}
+
+async function createTrainer() {
+    const name = document.getElementById('trainer-name').value.trim();
+    if (!name) {
+        alert('Please enter a trainer name');
+        return;
+    }
+    
+    try {
+        await apiCall('/trainers', 'POST', { name });
+        closeCreateTrainerModal();
+        loadTrainers();
+        alert('Trainer created successfully!');
+    } catch (error) {
+        console.error('Failed to create trainer:', error);
+    }
+}
+
+function openCreateTrainerModal() {
+    document.getElementById('create-trainer-modal').style.display = 'block';
+}
+
+function closeCreateTrainerModal() {
+    document.getElementById('create-trainer-modal').style.display = 'none';
+    document.getElementById('trainer-name').value = '';
+}
+
+async function manageTrainer(trainerId) {
+    const trainer = trainers.find(t => t.id === trainerId);
+    if (!trainer) return;
+    
+    document.getElementById('manage-trainer-id').value = trainerId;
+    document.getElementById('manage-trainer-name').value = trainer.name;
+    document.getElementById('manage-trainer-level').value = trainer.level;
+    document.getElementById('manage-trainer-experience').value = trainer.experience;
+    
+    document.getElementById('manage-trainer-modal').style.display = 'block';
+}
+
+function closeManageTrainerModal() {
+    document.getElementById('manage-trainer-modal').style.display = 'none';
+}
+
+async function updateTrainer() {
+    const trainerId = parseInt(document.getElementById('manage-trainer-id').value);
+    const name = document.getElementById('manage-trainer-name').value.trim();
+    const level = parseInt(document.getElementById('manage-trainer-level').value);
+    const experience = parseInt(document.getElementById('manage-trainer-experience').value);
+    
+    if (!name || level < 1 || experience < 0) {
+        alert('Please enter valid trainer information');
+        return;
+    }
+    
+    try {
+        await apiCall(`/trainers/${trainerId}`, 'PUT', { name, level, experience });
+        closeManageTrainerModal();
+        loadTrainers();
+        alert('Trainer updated successfully!');
+    } catch (error) {
+        console.error('Failed to update trainer:', error);
+    }
+}
+
+async function addPokemonToTrainer() {
+    const trainerId = parseInt(document.getElementById('manage-trainer-id').value);
+    const name = document.getElementById('pokemon-name').value.trim();
+    const maxLifePoint = parseInt(document.getElementById('pokemon-hp').value);
+    
+    if (!name || maxLifePoint <= 0) {
+        alert('Please enter valid Pokemon information');
+        return;
+    }
+    
+    try {
+        await apiCall(`/trainers/${trainerId}/pokemons`, 'POST', { name, maxLifePoint });
+        document.getElementById('pokemon-name').value = '';
+        document.getElementById('pokemon-hp').value = '';
+        loadTrainers();
+        alert('Pokemon added successfully!');
+    } catch (error) {
+        console.error('Failed to add Pokemon:', error);
+    }
+}
+
+async function healTrainerPokemon(trainerId) {
+    if (!confirm('Are you sure you want to heal all Pokemon for this trainer?')) {
+        return;
+    }
+    
+    try {
+        await apiCall(`/trainers/${trainerId}/heal`, 'POST');
+        loadTrainers();
+        alert('All Pokemon have been healed!');
+    } catch (error) {
+        console.error('Failed to heal Pokemon:', error);
+    }
+}
+
+async function loadAvailableAttacks() {
+    try {
+        const result = await apiCall('/trainers/attacks');
+        availableAttacks = result.data;
+    } catch (error) {
+        console.error('Failed to load attacks:', error);
+    }
+}
+
+async function managePokemonAttacks(trainerId, pokemonId, pokemonName) {
+    selectedTrainerId = trainerId;
+    selectedPokemonId = pokemonId;
+    
+    document.getElementById('pokemon-attacks-title').textContent = `Manage ${pokemonName}'s Attacks`;
+    
+    displayCurrentAttacks();
+    displayAvailableAttacks();
+    
+    document.getElementById('manage-pokemon-attacks-modal').style.display = 'block';
+}
+
+function closeManagePokemonAttacks() {
+    document.getElementById('manage-pokemon-attacks-modal').style.display = 'none';
+    selectedTrainerId = null;
+    selectedPokemonId = null;
+}
+
+function displayCurrentAttacks() {
+    const trainer = trainers.find(t => t.id === selectedTrainerId);
+    if (!trainer) return;
+    
+    const pokemon = trainer.pokemons.find(p => p.id === selectedPokemonId);
+    if (!pokemon) return;
+    
+    const container = document.getElementById('current-attacks');
+    if (pokemon.attacks.length === 0) {
+        container.innerHTML = '<div class="no-attacks">No attacks learned</div>';
+        return;
+    }
+    
+    container.innerHTML = pokemon.attacks.map(attack => `
+        <div class="attack-item current">
+            <div class="attack-info">
+                <div class="attack-name">${attack.name}</div>
+                <div class="attack-details">${attack.damage} dmg, ${attack.currentUsage}/${attack.usageLimit} uses</div>
+            </div>
+            <button onclick="removeAttackFromPokemon(${attack.id})" class="btn small danger">Remove</button>
+        </div>
+    `).join('');
+}
+
+function displayAvailableAttacks() {
+    const trainer = trainers.find(t => t.id === selectedTrainerId);
+    if (!trainer) return;
+    
+    const pokemon = trainer.pokemons.find(p => p.id === selectedPokemonId);
+    if (!pokemon) return;
+    
+    const currentAttackIds = pokemon.attacks.map(attack => attack.id);
+    const available = availableAttacks.filter(attack => !currentAttackIds.includes(attack.id));
+    
+    const container = document.getElementById('available-attacks');
+    if (available.length === 0) {
+        container.innerHTML = '<div class="no-attacks">No available attacks</div>';
+        return;
+    }
+    
+    container.innerHTML = available.map(attack => `
+        <div class="attack-item available">
+            <div class="attack-info">
+                <div class="attack-name">${attack.name}</div>
+                <div class="attack-details">${attack.damage} dmg, ${attack.usageLimit} uses</div>
+            </div>
+            <button onclick="addAttackToPokemon(${attack.id})" class="btn small">Add</button>
+        </div>
+    `).join('');
+}
+
+async function addAttackToPokemon(attackId) {
+    try {
+        await apiCall(`/trainers/${selectedTrainerId}/pokemons/${selectedPokemonId}/attacks`, 'POST', {
+            attackId: attackId
+        });
         
-        container.appendChild(trainerCard);
-    });
+        await loadTrainers();
+        displayCurrentAttacks();
+        displayAvailableAttacks();
+        alert('Attack added successfully!');
+    } catch (error) {
+        console.error('Failed to add attack:', error);
+    }
 }
 
-// Load trainer selects for battle/arena
-function loadTrainerSelects() {
-    const select1 = document.getElementById('trainer1-select');
-    const select2 = document.getElementById('trainer2-select');
-    const arenaSelect1 = document.getElementById('arena-trainer1-select');
-    const arenaSelect2 = document.getElementById('arena-trainer2-select');
+async function removeAttackFromPokemon(attackId) {
+    if (!confirm('Are you sure you want to remove this attack?')) {
+        return;
+    }
     
-    const options = trainers.map(trainer => 
-        `<option value="${trainer.id}">${trainer.name} (Lv.${trainer.level})</option>`
-    ).join('');
-    
-    select1.innerHTML = '<option value="">Select Trainer 1</option>' + options;
-    select2.innerHTML = '<option value="">Select Trainer 2</option>' + options;
-    arenaSelect1.innerHTML = '<option value="">Select Challenger 1</option>' + options;
-    arenaSelect2.innerHTML = '<option value="">Select Challenger 2</option>' + options;
+    try {
+        await apiCall(`/trainers/${selectedTrainerId}/pokemons/${selectedPokemonId}/attacks/${attackId}`, 'DELETE');
+        
+        await loadTrainers();
+        displayCurrentAttacks();
+        displayAvailableAttacks();
+        alert('Attack removed successfully!');
+    } catch (error) {
+        console.error('Failed to remove attack:', error);
+    }
 }
 
-// Load stats trainer select
-function loadStatsTrainerSelect() {
-    const select = document.getElementById('stats-trainer-select');
-    const options = trainers.map(trainer => 
-        `<option value="${trainer.id}">${trainer.name} (Lv.${trainer.level})</option>`
-    ).join('');
+window.onclick = function(event) {
+    const createModal = document.getElementById('create-trainer-modal');
+    const manageModal = document.getElementById('manage-trainer-modal');
+    const attacksModal = document.getElementById('manage-pokemon-attacks-modal');
     
-    select.innerHTML = '<option value="">Select Trainer for Stats</option>' + options;
+    if (event.target === createModal) {
+        closeCreateTrainerModal();
+    }
+    if (event.target === manageModal) {
+        closeManageTrainerModal();
+    }
+    if (event.target === attacksModal) {
+        closeManagePokemonAttacks();
+    }
 }
 
-// Battle functions
-async function startRandomBattle() {
+async function loadTrainerSelects() {
+    const trainer1Select = document.getElementById('trainer1-select');
+    const trainer2Select = document.getElementById('trainer2-select');
+    
+    if (trainer1Select && trainer2Select) {
+        const options = trainers.map(trainer => 
+            `<option value="${trainer.id}">${trainer.name} (Level ${trainer.level})</option>`
+        ).join('');
+        
+        trainer1Select.innerHTML = '<option value="">Select Trainer 1</option>' + options;
+        trainer2Select.innerHTML = '<option value="">Select Trainer 2</option>' + options;
+    }
+}
+
+async function loadStatsTrainerSelect() {
+    const trainerSelect = document.getElementById('stats-trainer-select');
+    
+    if (trainerSelect) {
+        const options = trainers.map(trainer => 
+            `<option value="${trainer.id}">${trainer.name} (Level ${trainer.level})</option>`
+        ).join('');
+        
+        trainerSelect.innerHTML = '<option value="">Select Trainer</option>' + options;
+    }
+}
+
+async function startRandomChallenge() {
     const trainer1Id = document.getElementById('trainer1-select').value;
     const trainer2Id = document.getElementById('trainer2-select').value;
     
     if (!trainer1Id || !trainer2Id) {
-        alert('Please select both trainers!');
+        alert('Please select both trainers');
         return;
     }
     
     if (trainer1Id === trainer2Id) {
-        alert('A trainer cannot battle themselves!');
+        alert('Please select different trainers');
         return;
     }
     
@@ -177,23 +401,22 @@ async function startRandomBattle() {
         });
         
         displayBattleResult(result.data);
-        loadTrainers(); // Refresh trainers to show updated stats
     } catch (error) {
-        console.error('Battle failed:', error);
+        console.error('Failed to start random challenge:', error);
     }
 }
 
-async function startDeterministicBattle() {
+async function startDeterministicChallenge() {
     const trainer1Id = document.getElementById('trainer1-select').value;
     const trainer2Id = document.getElementById('trainer2-select').value;
     
     if (!trainer1Id || !trainer2Id) {
-        alert('Please select both trainers!');
+        alert('Please select both trainers');
         return;
     }
     
     if (trainer1Id === trainer2Id) {
-        alert('A trainer cannot battle themselves!');
+        alert('Please select different trainers');
         return;
     }
     
@@ -204,24 +427,22 @@ async function startDeterministicBattle() {
         });
         
         displayBattleResult(result.data);
-        loadTrainers(); // Refresh trainers to show updated stats
     } catch (error) {
-        console.error('Battle failed:', error);
+        console.error('Failed to start deterministic challenge:', error);
     }
 }
 
-// Arena functions
 async function startArena1() {
-    const trainer1Id = document.getElementById('arena-trainer1-select').value;
-    const trainer2Id = document.getElementById('arena-trainer2-select').value;
+    const trainer1Id = document.getElementById('trainer1-select').value;
+    const trainer2Id = document.getElementById('trainer2-select').value;
     
     if (!trainer1Id || !trainer2Id) {
-        alert('Please select both challengers!');
+        alert('Please select both trainers');
         return;
     }
     
     if (trainer1Id === trainer2Id) {
-        alert('A trainer cannot battle themselves!');
+        alert('Please select different trainers');
         return;
     }
     
@@ -232,23 +453,22 @@ async function startArena1() {
         });
         
         displayArenaResult(result.data);
-        loadTrainers(); // Refresh trainers to show updated stats
     } catch (error) {
-        console.error('Arena failed:', error);
+        console.error('Failed to start arena 1:', error);
     }
 }
 
 async function startArena2() {
-    const trainer1Id = document.getElementById('arena-trainer1-select').value;
-    const trainer2Id = document.getElementById('arena-trainer2-select').value;
+    const trainer1Id = document.getElementById('trainer1-select').value;
+    const trainer2Id = document.getElementById('trainer2-select').value;
     
     if (!trainer1Id || !trainer2Id) {
-        alert('Please select both challengers!');
+        alert('Please select both trainers');
         return;
     }
     
     if (trainer1Id === trainer2Id) {
-        alert('A trainer cannot battle themselves!');
+        alert('Please select different trainers');
         return;
     }
     
@@ -259,62 +479,47 @@ async function startArena2() {
         });
         
         displayArenaResult(result.data);
-        loadTrainers(); // Refresh trainers to show updated stats
     } catch (error) {
-        console.error('Arena failed:', error);
+        console.error('Failed to start arena 2:', error);
     }
 }
 
-// Display battle result
-function displayBattleResult(battle) {
+function displayBattleResult(result) {
     const container = document.getElementById('battle-result');
-    
-    const details = battle.details.map(detail => `<div>${detail}</div>`).join('');
-    
     container.innerHTML = `
-        <div class="battle-winner">🏆 Winner: ${battle.winner.name}!</div>
+        <h3>Battle Result</h3>
+        <p><strong>Winner:</strong> ${result.winner.name}</p>
+        <p><strong>Rounds:</strong> ${result.rounds}</p>
+        <h4>Battle Details:</h4>
         <div class="battle-details">
-            <strong>Battle Summary:</strong><br>
-            Rounds: ${battle.rounds}<br>
-            Winner Level: ${battle.winner.level} | Experience: ${battle.winner.experience}<br>
-            Loser Level: ${battle.loser.level} | Experience: ${battle.loser.experience}<br><br>
-            <strong>Battle Log:</strong><br>
-            ${details}
+            ${result.details.map(detail => `<p>${detail}</p>`).join('')}
         </div>
     `;
+    container.style.display = 'block';
 }
 
-// Display arena result
-function displayArenaResult(arena) {
+function displayArenaResult(result) {
     const container = document.getElementById('arena-result');
-    
-    const summary = `
+    container.innerHTML = `
+        <h3>Arena Result</h3>
+        <p><strong>Winner:</strong> ${result.winner.name}</p>
+        <p><strong>Total Battles:</strong> ${result.totalBattles}</p>
+        <h4>Battle Summary:</h4>
         <div class="arena-summary">
-            <strong>🏆 Arena Champion: ${arena.winner.name}!</strong><br>
-            Total Battles: ${arena.totalBattles}<br>
-            Winner Level: ${arena.winner.level} | Experience: ${arena.winner.experience}
+            ${result.results.slice(0, 10).map((battle, index) => 
+                `<p>Battle ${index + 1}: ${battle.winner.name} won in ${battle.rounds} rounds</p>`
+            ).join('')}
+            ${result.results.length > 10 ? `<p>... and ${result.results.length - 10} more battles</p>` : ''}
         </div>
     `;
-    
-    const battleResults = arena.results.slice(0, 10).map((battle, index) => 
-        `<div>Battle ${index + 1}: ${battle.winner.name} won in ${battle.rounds} rounds</div>`
-    ).join('');
-    
-    container.innerHTML = summary + `
-        <div class="battle-details">
-            <strong>First 10 Battles:</strong><br>
-            ${battleResults}
-            ${arena.results.length > 10 ? `<div>... and ${arena.results.length - 10} more battles</div>` : ''}
-        </div>
-    `;
+    container.style.display = 'block';
 }
 
-// Stats functions
 async function loadTrainerStats() {
     const trainerId = document.getElementById('stats-trainer-select').value;
     
     if (!trainerId) {
-        alert('Please select a trainer!');
+        alert('Please select a trainer');
         return;
     }
     
@@ -322,77 +527,28 @@ async function loadTrainerStats() {
         const result = await apiCall(`/combat/stats/${trainerId}`);
         displayTrainerStats(result.data);
     } catch (error) {
-        console.error('Failed to load stats:', error);
+        console.error('Failed to load trainer stats:', error);
     }
 }
 
 function displayTrainerStats(stats) {
     const container = document.getElementById('stats-result');
-    
-    const pokemonInfo = stats.trainer.pokemons.map(pokemon => {
-        const attacks = pokemon.attacks.map(attack => 
-            `${attack.name} (${attack.damage}dmg)`
-        ).join(', ');
-        
-        return `
-            <div class="pokemon-item">
-                <div class="pokemon-name">${pokemon.name}</div>
-                <div class="pokemon-hp">HP: ${pokemon.lifePoint}/${pokemon.maxLifePoint}</div>
-                <div class="attacks-list">Attacks: ${attacks || 'None'}</div>
-            </div>
-        `;
-    }).join('');
-    
     container.innerHTML = `
-        <div class="trainer-name">${stats.trainer.name}</div>
-        <div class="trainer-info">
-            Level: ${stats.trainer.level} | Experience: ${stats.trainer.experience}
-        </div>
-        <div style="margin: 15px 0;">
-            <strong>Combat Statistics:</strong><br>
-            Alive Pokémon: ${stats.alivePokemonCount}/${stats.totalPokemonCount}<br>
-            Average Pokémon HP: ${stats.averagePokemonHP}
-        </div>
-        <div class="pokemon-list">
-            ${pokemonInfo || '<div style="text-align: center; color: #6c757d; font-size: 8px;">No Pokémon</div>'}
+        <h3>Trainer Statistics</h3>
+        <p><strong>Name:</strong> ${stats.trainer.name}</p>
+        <p><strong>Level:</strong> ${stats.trainer.level}</p>
+        <p><strong>Experience:</strong> ${stats.trainer.experience}</p>
+        <p><strong>Alive Pokemon:</strong> ${stats.alivePokemonCount}/${stats.totalPokemonCount}</p>
+        <p><strong>Average Pokemon HP:</strong> ${stats.averagePokemonHP}</p>
+        <h4>Pokemon Details:</h4>
+        <div class="pokemon-stats">
+            ${stats.trainer.pokemons.map(pokemon => `
+                <div class="pokemon-stat">
+                    <strong>${pokemon.name}</strong> - HP: ${pokemon.lifePoint}/${pokemon.maxLifePoint}
+                    <br>Attacks: ${pokemon.attacks.map(attack => attack.name).join(', ')}
+                </div>
+            `).join('')}
         </div>
     `;
-}
-
-// Create trainer functions
-function showCreateTrainer() {
-    document.getElementById('create-trainer-modal').style.display = 'block';
-}
-
-function closeCreateTrainer() {
-    document.getElementById('create-trainer-modal').style.display = 'none';
-    document.getElementById('trainer-name').value = '';
-}
-
-async function createTrainer(event) {
-    event.preventDefault();
-    
-    const name = document.getElementById('trainer-name').value.trim();
-    
-    if (!name) {
-        alert('Please enter a trainer name!');
-        return;
-    }
-    
-    try {
-        await apiCall('/trainers', 'POST', { name });
-        closeCreateTrainer();
-        loadTrainers();
-        alert(`Trainer "${name}" created successfully!`);
-    } catch (error) {
-        console.error('Failed to create trainer:', error);
-    }
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('create-trainer-modal');
-    if (event.target === modal) {
-        closeCreateTrainer();
-    }
+    container.style.display = 'block';
 }

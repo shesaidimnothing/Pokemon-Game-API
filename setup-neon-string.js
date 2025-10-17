@@ -1,7 +1,5 @@
-// Script pour configurer la base de données Neon avec connection string
 const { Pool } = require('pg');
 
-// Utiliser directement la connection string
 const connectionString = 'postgresql://neondb_owner:npg_cKOvq6s9LXNW@ep-lively-wind-adfofg7q-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 
 const pool = new Pool({
@@ -16,15 +14,12 @@ async function setupNeonDatabase() {
   try {
     console.log('🔌 Connexion à Neon avec connection string...');
     
-    // Tester la connexion
     const client = await pool.connect();
     console.log('✅ Connexion à Neon réussie !');
     
-    // Créer les tables
     console.log('📋 Création des tables...');
     
     const createTablesQuery = `
-      -- Table des attaques
       CREATE TABLE IF NOT EXISTS attacks (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
@@ -33,7 +28,6 @@ async function setupNeonDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- Table des dresseurs
       CREATE TABLE IF NOT EXISTS trainers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
@@ -42,7 +36,6 @@ async function setupNeonDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- Table des Pokémon
       CREATE TABLE IF NOT EXISTS pokemons (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -52,7 +45,6 @@ async function setupNeonDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- Table de liaison Pokémon-Attaques
       CREATE TABLE IF NOT EXISTS pokemon_attacks (
         id SERIAL PRIMARY KEY,
         pokemon_id INTEGER REFERENCES pokemons(id) ON DELETE CASCADE,
@@ -61,7 +53,6 @@ async function setupNeonDatabase() {
         UNIQUE(pokemon_id, attack_id)
       );
 
-      -- Index pour améliorer les performances
       CREATE INDEX IF NOT EXISTS idx_pokemons_trainer_id ON pokemons(trainer_id);
       CREATE INDEX IF NOT EXISTS idx_pokemon_attacks_pokemon_id ON pokemon_attacks(pokemon_id);
       CREATE INDEX IF NOT EXISTS idx_pokemon_attacks_attack_id ON pokemon_attacks(attack_id);
@@ -70,14 +61,12 @@ async function setupNeonDatabase() {
     await client.query(createTablesQuery);
     console.log('✅ Tables créées avec succès !');
     
-    // Vérifier si des données existent déjà
     const trainerCount = await client.query('SELECT COUNT(*) FROM trainers');
     if (parseInt(trainerCount.rows[0].count) > 0) {
       console.log('ℹ️  Des données existent déjà, pas d\'insertion de données de test');
     } else {
       console.log('🌱 Insertion des données de test...');
       
-      // Insérer des attaques de base
       const attacks = [
         { name: 'Tackle', damage: 10, usage_limit: 5 },
         { name: 'Ember', damage: 15, usage_limit: 3 },
@@ -98,7 +87,6 @@ async function setupNeonDatabase() {
         );
       }
 
-      // Insérer des dresseurs de test
       const trainers = [
         { name: 'Ash', level: 5, experience: 3 },
         { name: 'Misty', level: 4, experience: 7 },
@@ -112,11 +100,9 @@ async function setupNeonDatabase() {
         );
       }
 
-      // Récupérer les IDs des attaques et dresseurs
       const attackIds = await client.query('SELECT id, name FROM attacks');
       const trainerIds = await client.query('SELECT id, name FROM trainers');
 
-      // Insérer des Pokémon de test
       const pokemons = [
         { name: 'Pikachu', max_life_point: 100, trainer_name: 'Ash' },
         { name: 'Charmander', max_life_point: 90, trainer_name: 'Ash' },
@@ -136,7 +122,6 @@ async function setupNeonDatabase() {
           
           const pokemonId = result.rows[0].id;
           
-          // Assigner des attaques aléatoires au Pokémon
           const randomAttacks = attackIds.rows.sort(() => 0.5 - Math.random()).slice(0, 4);
           for (const attack of randomAttacks) {
             await client.query(

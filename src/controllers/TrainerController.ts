@@ -2,9 +2,6 @@ import { Request, Response } from 'express';
 import { trainerService } from '../services/TrainerService';
 
 export class TrainerController {
-  /**
-   * Récupère tous les dresseurs
-   */
   async getAllTrainers(req: Request, res: Response): Promise<void> {
     try {
       const trainers = await trainerService.getAllTrainers();
@@ -22,9 +19,6 @@ export class TrainerController {
     }
   }
 
-  /**
-   * Récupère un dresseur par ID
-   */
   async getTrainerById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
@@ -58,9 +52,6 @@ export class TrainerController {
     }
   }
 
-  /**
-   * Crée un nouveau dresseur
-   */
   async createTrainer(req: Request, res: Response): Promise<void> {
     try {
       const { name } = req.body;
@@ -89,9 +80,6 @@ export class TrainerController {
     }
   }
 
-  /**
-   * Met à jour un dresseur
-   */
   async updateTrainer(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
@@ -162,9 +150,6 @@ export class TrainerController {
     }
   }
 
-  /**
-   * Supprime un dresseur
-   */
   async deleteTrainer(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
@@ -198,9 +183,6 @@ export class TrainerController {
     }
   }
 
-  /**
-   * Ajoute un Pokémon à un dresseur
-   */
   async addPokemonToTrainer(req: Request, res: Response): Promise<void> {
     try {
       const trainerId = parseInt(req.params.id);
@@ -257,9 +239,6 @@ export class TrainerController {
     }
   }
 
-  /**
-   * Soigne tous les Pokémon d'un dresseur
-   */
   async healAllPokemons(req: Request, res: Response): Promise<void> {
     try {
       const trainerId = parseInt(req.params.id);
@@ -285,7 +264,97 @@ export class TrainerController {
       });
     }
   }
+
+  async getAllAttacks(req: Request, res: Response): Promise<void> {
+    try {
+      const attacks = await trainerService.getAllAttacks();
+      res.json({
+        success: true,
+        data: attacks
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la récupération des attaques',
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      });
+    }
+  }
+
+  async addAttackToPokemon(req: Request, res: Response): Promise<void> {
+    try {
+      const trainerId = parseInt(req.params.trainerId);
+      const pokemonId = parseInt(req.params.pokemonId);
+      const attackId = parseInt(req.body.attackId);
+
+      if (isNaN(trainerId) || isNaN(pokemonId) || isNaN(attackId)) {
+        res.status(400).json({
+          success: false,
+          message: 'IDs invalides'
+        });
+        return;
+      }
+
+      const result = await trainerService.addAttackToPokemon(trainerId, pokemonId, attackId);
+      
+      if (!result) {
+        res.status(404).json({
+          success: false,
+          message: 'Dresseur, Pokémon ou attaque introuvable'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Attaque ajoutée avec succès'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'Erreur lors de l\'ajout de l\'attaque',
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      });
+    }
+  }
+
+  async removeAttackFromPokemon(req: Request, res: Response): Promise<void> {
+    try {
+      const trainerId = parseInt(req.params.trainerId);
+      const pokemonId = parseInt(req.params.pokemonId);
+      const attackId = parseInt(req.params.attackId);
+
+      if (isNaN(trainerId) || isNaN(pokemonId) || isNaN(attackId)) {
+        res.status(400).json({
+          success: false,
+          message: 'IDs invalides'
+        });
+        return;
+      }
+
+      const result = await trainerService.removeAttackFromPokemon(trainerId, pokemonId, attackId);
+      
+      if (!result) {
+        res.status(404).json({
+          success: false,
+          message: 'Dresseur, Pokémon ou attaque introuvable'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        message: 'Attaque supprimée avec succès'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la suppression de l\'attaque',
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      });
+    }
+  }
 }
 
 export const trainerController = new TrainerController();
-

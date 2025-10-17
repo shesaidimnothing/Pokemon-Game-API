@@ -2,9 +2,6 @@ import { Request, Response } from 'express';
 import { combatService } from '../services/CombatService';
 
 export class CombatController {
-  /**
-   * Défi aléatoire entre deux dresseurs
-   */
   async randomChallenge(req: Request, res: Response): Promise<void> {
     try {
       const { trainer1Id, trainer2Id } = req.body;
@@ -52,9 +49,6 @@ export class CombatController {
     }
   }
 
-  /**
-   * Défi déterministe entre deux dresseurs
-   */
   async deterministicChallenge(req: Request, res: Response): Promise<void> {
     try {
       const { trainer1Id, trainer2Id } = req.body;
@@ -102,9 +96,6 @@ export class CombatController {
     }
   }
 
-  /**
-   * Arène 1 : 100 combats aléatoires successifs
-   */
   async arena1(req: Request, res: Response): Promise<void> {
     try {
       const { trainer1Id, trainer2Id } = req.body;
@@ -152,9 +143,6 @@ export class CombatController {
     }
   }
 
-  /**
-   * Arène 2 : 100 combats déterministes consécutifs
-   */
   async arena2(req: Request, res: Response): Promise<void> {
     try {
       const { trainer1Id, trainer2Id } = req.body;
@@ -202,9 +190,6 @@ export class CombatController {
     }
   }
 
-  /**
-   * Soigne tous les Pokémon d'un dresseur
-   */
   async healTrainerPokemons(req: Request, res: Response): Promise<void> {
     try {
       const trainerId = parseInt(req.params.id);
@@ -231,9 +216,6 @@ export class CombatController {
     }
   }
 
-  /**
-   * Obtient les statistiques de combat d'un dresseur
-   */
   async getTrainerCombatStats(req: Request, res: Response): Promise<void> {
     try {
       const trainerId = parseInt(req.params.id);
@@ -262,4 +244,3 @@ export class CombatController {
 }
 
 export const combatController = new CombatController();
-

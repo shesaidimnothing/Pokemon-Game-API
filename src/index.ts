@@ -5,16 +5,15 @@ import dotenv from 'dotenv';
 import { databaseService } from './services/database';
 import trainerRoutes from './routes/trainerRoutes';
 import combatRoutes from './routes/combatRoutes';
+import badgeRoutes from './routes/badgeRoutes';
 
-// Charger les variables d'environnement
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware de sécurité
 app.use(helmet({
-  contentSecurityPolicy: false // Disable CSP for development
+  contentSecurityPolicy: false
 }));
 app.use(cors({
   origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
@@ -23,20 +22,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir les fichiers statiques
 app.use(express.static('public'));
 
-// Middleware de logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Routes
 app.use('/api/trainers', trainerRoutes);
 app.use('/api/combat', combatRoutes);
+app.use('/api/badges', badgeRoutes);
 
-// Route de santé
 app.get('/health', (req, res) => {
   res.json({
     success: true,
@@ -46,7 +42,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Route racine
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -78,7 +73,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Middleware de gestion d'erreurs
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Erreur:', err);
   res.status(500).json({
@@ -88,7 +82,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Middleware pour les routes non trouvées
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
@@ -97,18 +90,14 @@ app.use('*', (req, res) => {
   });
 });
 
-// Fonction pour initialiser l'application
 async function initializeApp() {
   try {
-    // Initialiser la base de données
     await databaseService.initializeTables();
     console.log('✅ Tables de base de données initialisées');
 
-    // Insérer les données de test
     await databaseService.seedTestData();
     console.log('✅ Données de test insérées');
 
-    // Démarrer le serveur
     app.listen(PORT, () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       console.log(`📚 Documentation disponible sur http://localhost:${PORT}`);
@@ -120,7 +109,6 @@ async function initializeApp() {
   }
 }
 
-// Gestion des signaux de fermeture
 process.on('SIGINT', async () => {
   console.log('\n🛑 Arrêt du serveur...');
   await databaseService.close();
@@ -133,6 +121,4 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-// Initialiser l'application
 initializeApp();
-

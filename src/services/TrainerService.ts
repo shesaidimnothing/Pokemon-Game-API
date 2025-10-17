@@ -5,9 +5,6 @@ import { Attack } from '../models/Attack';
 import { ITrainer } from '../types';
 
 export class TrainerService {
-  /**
-   * Récupère tous les dresseurs
-   */
   async getAllTrainers(): Promise<Trainer[]> {
     const query = `
       SELECT t.*, 
@@ -48,9 +45,6 @@ export class TrainerService {
     return result.rows.map((row: any) => this.mapRowToTrainer(row));
   }
 
-  /**
-   * Récupère un dresseur par ID
-   */
   async getTrainerById(id: number): Promise<Trainer | null> {
     const query = `
       SELECT t.*, 
@@ -93,9 +87,6 @@ export class TrainerService {
     return this.mapRowToTrainer(result.rows[0]);
   }
 
-  /**
-   * Crée un nouveau dresseur
-   */
   async createTrainer(trainerData: { name: string }): Promise<Trainer> {
     const query = `
       INSERT INTO trainers (name, level, experience) 
@@ -109,9 +100,6 @@ export class TrainerService {
     return new Trainer(row.name, row.id);
   }
 
-  /**
-   * Met à jour un dresseur
-   */
   async updateTrainer(id: number, trainerData: Partial<ITrainer>): Promise<Trainer | null> {
     const fields = [];
     const values = [];
@@ -148,24 +136,16 @@ export class TrainerService {
     return this.getTrainerById(id);
   }
 
-  /**
-   * Supprime un dresseur
-   */
   async deleteTrainer(id: number): Promise<boolean> {
     const query = 'DELETE FROM trainers WHERE id = $1';
     const result = await databaseService.query(query, [id]);
     return result.rowCount > 0;
   }
 
-  /**
-   * Ajoute un Pokémon à un dresseur
-   */
   async addPokemonToTrainer(trainerId: number, pokemonData: { name: string; maxLifePoint: number }): Promise<Pokemon | null> {
-    // Vérifier que le dresseur existe
     const trainer = await this.getTrainerById(trainerId);
     if (!trainer) return null;
 
-    // Vérifier la limite de 6 Pokémon
     if (trainer.pokemons.length >= 6) {
       throw new Error('Le dresseur ne peut pas avoir plus de 6 Pokémon');
     }
@@ -187,9 +167,6 @@ export class TrainerService {
     return new Pokemon(row.name, row.max_life_point, row.id);
   }
 
-  /**
-   * Soigne tous les Pokémon d'un dresseur
-   */
   async healAllPokemons(trainerId: number): Promise<boolean> {
     const query = `
       UPDATE pokemons 
@@ -199,7 +176,6 @@ export class TrainerService {
 
     await databaseService.query(query, [trainerId]);
 
-    // Réinitialiser les usages des attaques
     const resetAttacksQuery = `
       UPDATE pokemon_attacks 
       SET current_usage = 0 
@@ -210,9 +186,71 @@ export class TrainerService {
     return true;
   }
 
-  /**
-   * Convertit une ligne de base de données en objet Trainer
-   */
+  async getAllAttacks(): Promise<Attack[]> {
+    const query = 'SELECT * FROM attacks ORDER BY name';
+    const result = await databaseService.query(query);
+    return result.rows.map((row: any) => new Attack(row.name, row.damage, row.usage_limit, row.id));
+  }
+
+  async addAttackToPokemon(trainerId: number, pokemonId: number, attackId: number): Promise<Trainer | null> {
+    const trainer = await this.getTrainerById(trainerId);
+    if (!trainer) return null;
+
+    const pokemon = trainer.pokemons.find(p => p.id === pokemonId);
+    if (!pokemon) return null;
+
+    if (pokemon.attacks.length >= 4) {
+      throw new Error('Le Pokémon ne peut pas avoir plus de 4 attaques');
+    }
+
+    if (pokemon.attacks.some(attack => attack.id === attackId)) {
+      throw new Error('Le Pokémon connaît déjà cette attaque');
+    }
+
+    const attackQuery = 'SELECT * FROM attacks WHERE id = $1';
+    const attackResult = await databaseService.query(attackQuery, [attackId]);
+    if (attackResult.rows.length === 0) return null;
+
+    const attackData = attackResult.rows[0];
+
+    const insertQuery = `
+      INSERT INTO pokemon_attacks (pokemon_id, attack_id, current_usage) 
+      VALUES ($1, $2, 0)
+    `;
+    await databaseService.query(insertQuery, [pokemonId, attackId]);
+
+    return this.getTrainerById(trainerId);
+  }
+
+  async removeAttackFromPokemon(trainerId: number, pokemonId: number, attackId: number): Promise<boolean> {
+    const trainer = await this.getTrainerById(trainerId);
+    if (!trainer) return false;
+
+    const pokemon = trainer.pokemons.find(p => p.id === pokemonId);
+    if (!pokemon) return false;
+
+    const deleteQuery = `
+      DELETE FROM pokemon_attacks 
+      WHERE pokemon_id = $1 AND attack_id = $2
+    `;
+    const result = await databaseService.query(deleteQuery, [pokemonId, attackId]);
+    
+    return result.rowCount > 0;
+  }
+
+  async savePokemonHP(trainerId: number, pokemons: Pokemon[]): Promise<void> {
+    for (const pokemon of pokemons) {
+      if (pokemon.id) {
+        const query = `
+          UPDATE pokemons 
+          SET life_point = $1 
+          WHERE id = $2
+        `;
+        await databaseService.query(query, [pokemon.lifePoint, pokemon.id]);
+      }
+    }
+  }
+
   private mapRowToTrainer(row: any): Trainer {
     const trainer = new Trainer(row.name, row.id);
     trainer.level = row.level;
@@ -240,4 +278,3 @@ export class TrainerService {
 }
 
 export const trainerService = new TrainerService();
-

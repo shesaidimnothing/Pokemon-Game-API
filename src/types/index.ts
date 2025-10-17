@@ -22,6 +22,16 @@ export interface ITrainer {
   pokemons: IPokemon[];
 }
 
+export interface IBadge {
+  id?: number;
+  name: string;
+  description: string;
+  gymLeader: string;
+  difficulty: number;
+  isObtained: boolean;
+  obtainedAt?: Date;
+}
+
 export interface ICombatResult {
   winner: ITrainer;
   loser: ITrainer;

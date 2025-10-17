@@ -21,7 +21,6 @@
             <button class="tab-btn" onclick="showTab('stats')">📊 Stats</button>
         </div>
 
-        <!-- Trainers Tab -->
         <div id="trainers" class="tab-content active">
             <div class="section">
                 <h2>👥 Trainers</h2>
@@ -33,7 +32,6 @@
             </div>
         </div>
 
-        <!-- Battle Tab -->
         <div id="battle" class="tab-content">
             <div class="section">
                 <h2>⚔️ Battle Arena</h2>
@@ -60,7 +58,6 @@
             </div>
         </div>
 
-        <!-- Arena Tab -->
         <div id="arena" class="tab-content">
             <div class="section">
                 <h2>🏟️ Arena Tournament</h2>
@@ -87,7 +84,6 @@
             </div>
         </div>
 
-        <!-- Stats Tab -->
         <div id="stats" class="tab-content">
             <div class="section">
                 <h2>📊 Statistics</h2>
@@ -101,22 +97,54 @@
             </div>
         </div>
 
-        <!-- Create Trainer Modal -->
-        <div id="create-trainer-modal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeCreateTrainer()">&times;</span>
-                <h2>Create New Trainer</h2>
-                <form onsubmit="createTrainer(event)">
-                    <input type="text" id="trainer-name" placeholder="Trainer Name" required>
-                    <button type="submit" class="btn primary">Create Trainer</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Loading Indicator -->
         <div id="loading" class="loading hidden">
-            <div class="spinner"></div>
+            <div class="loading-spinner"></div>
             <p>Loading...</p>
+        </div>
+    </div>
+
+    <div id="create-trainer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreateTrainerModal()">&times;</span>
+            <h2>Create New Trainer</h2>
+            <input type="text" id="trainer-name" placeholder="Enter trainer name" required>
+            <button onclick="createTrainer()" class="btn primary">Create Trainer</button>
+        </div>
+    </div>
+
+    <div id="manage-trainer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeManageTrainerModal()">&times;</span>
+            <h2>Manage Trainer</h2>
+            <input type="hidden" id="manage-trainer-id">
+            <input type="text" id="manage-trainer-name" placeholder="Trainer name" required>
+            <input type="number" id="manage-trainer-level" placeholder="Level" min="1" required>
+            <input type="number" id="manage-trainer-experience" placeholder="Experience" min="0" required>
+            <button onclick="updateTrainer()" class="btn primary">Update Trainer</button>
+            
+            <h3>Add Pokemon</h3>
+            <input type="text" id="pokemon-name" placeholder="Pokemon name" required>
+            <input type="number" id="pokemon-hp" placeholder="Max HP" min="1" required>
+            <button onclick="addPokemonToTrainer()" class="btn secondary">Add Pokemon</button>
+        </div>
+    </div>
+
+    <div id="manage-pokemon-attacks-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeManagePokemonAttacks()">&times;</span>
+            <h2 id="pokemon-attacks-title">Manage Pokemon Attacks</h2>
+            
+            <div class="pokemon-attacks-container">
+                <div class="attacks-section">
+                    <h3>Current Attacks</h3>
+                    <div id="current-attacks" class="attacks-list"></div>
+                </div>
+                
+                <div class="attacks-section">
+                    <h3>Available Attacks</h3>
+                    <div id="available-attacks" class="attacks-list"></div>
+                </div>
+            </div>
         </div>
     </div>
 
